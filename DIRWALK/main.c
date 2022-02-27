@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
 
@@ -34,23 +33,9 @@ void print_dir(char *path, char* args)
             }
             continue;
         }
-        if(strstr(args,"l")&&namelist[i]->d_type==DT_LNK)
-        {
-            printf("%s",path);
+        if(strstr(args,"l")&&namelist[i]->d_type==DT_LNK) {
+            printf("%s", path);
             puts(namelist[i]->d_name);
-            continue;
-        }
-        if(strstr(args,"d")&&namelist[i]->d_type==DT_DIR)
-        {
-            if(strcmp(namelist[i]->d_name,".")!=0 && strcmp(namelist[i]->d_name,"..")!=0 ) {
-                printf("%s",path);
-                puts(namelist[i]->d_name);
-                char *path1=(char*) calloc((sizeof (path) + sizeof (namelist[i]->d_name)),sizeof (char ));
-                path1 = strcat(path1, path);
-                path1 = strcat(path1,namelist[i]->d_name);
-                path1 = strcat(path1,"/");
-                print_dir(path1, args);
-            }
             continue;
         }
         if(strstr(args,"f")&&namelist[i]->d_type==DT_REG)
@@ -59,13 +44,29 @@ void print_dir(char *path, char* args)
             puts(namelist[i]->d_name);
             continue;
         }
+        if(namelist[i]->d_type==DT_DIR)
+        {
+            if(strcmp(namelist[i]->d_name,".")!=0 && strcmp(namelist[i]->d_name,"..")!=0 ) {
+                if(strstr(args,"d")) {
+                    printf("%s", path);
+                    puts(namelist[i]->d_name);
+                }
+                char *path1=(char*) calloc((sizeof (path) + sizeof (namelist[i]->d_name)),sizeof (char ));
+                path1 = strcat(path1, path);
+                path1 = strcat(path1,namelist[i]->d_name);
+                path1 = strcat(path1,"/");
+                print_dir(path1, args);
+            }
+            continue;
+        }
     }
-
 }
 
 int main(int argc, char* argv[]) {
     char *arg=NULL;
-    char *dir="./";
+    char buf[PATH_MAX]; /* PATH_MAX incudes the \0 so +1 is not required */
+    char *dir = realpath("./", buf);
+    strcat(dir, "/");
     for(int i=1;i<argc;i++)
     {
         if(strcmp(argv[i],"-type")==0)
